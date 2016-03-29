@@ -1,5 +1,9 @@
 package fm
 
+import (
+	"strings"
+)
+
 type TotalStruct struct {
 	Total int `json:"total"`
 }
@@ -32,11 +36,17 @@ type Artist struct {
 }
 
 type Track struct {
-	Name       string   `json:"name"`
-	SpotifyUri string   `json:"spotify_uri"`
-	Artists    []Artist `json:"artists"`
-	Id         string   `json:"id"`
-	Albums     Album    `json:"album"`
+	Name        string   `json:"name"`
+	SpotifyUri  string   `json:"spotify_uri"`
+	Artists     []Artist `json:"artists"`
+	Id          string   `json:"id"`
+	Albums      Album    `json:"album"`
+	AudioSumary string
+}
+
+func (t *Track) GetSpotifyUri() string {
+	parts := strings.Split(t.SpotifyUri, ":")
+	return parts[len(parts)-1]
 }
 
 type Stats struct {
