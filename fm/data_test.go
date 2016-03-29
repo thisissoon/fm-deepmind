@@ -32,3 +32,14 @@ func TestDatasetReturnsCorrectWeights(t *testing.T) {
 
 	assert.Equal(t, []float64{4.0 / 9.0, 5.0 / 9.0}, ds.GetWeights())
 }
+
+func TestSumOfWeighShouleBeZero(t *testing.T) {
+	ds := DataSet{}
+	ds.Append(DataObject{Label: "abc", Total: 4})
+	ds.Append(DataObject{Label: "abc", Total: 5})
+	ds.Append(DataObject{Label: "abc", Total: 6})
+
+	weights := ds.GetWeights()
+
+	assert.Equal(t, float64(1), weights[0]+weights[1]+weights[2])
+}

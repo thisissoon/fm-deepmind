@@ -32,6 +32,10 @@ func (ds *DataSet) GetWeights() []float64 {
 	return weights
 }
 
+func (ds *DataSet) Get(d int) DataObject {
+	return ds.D[d]
+}
+
 type DataAdapter struct {
 	Db *sql.DB
 }
@@ -42,33 +46,10 @@ func (d *DataAdapter) Conn(s string) error {
 	return err
 }
 
-func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
-	query := fmt.Sprintf(`
-	SELECT
-	  (
-	    SELECT (
-	      SELECT array_length(array_agg(users), 1)
-	      FROM (
-	        SELECT DISTINCT users
-	        FROM (
-	          SELECT unnest(array_agg(playlist_history.user_id)) AS users
-	        ) AS t1
-	      ) AS t2
-	    ) AS the_array
-	  ),
-	  genre.id,
-	  genre.name
-	FROM genre
-	INNER JOIN artist_genre ON genre.id = artist_genre.grenre_id
-	INNER JOIN artist_track ON artist_track.artist_id = artist_genre.artist_id
-	INNER JOIN track ON track.id = artist_track.track_id
-	INNER JOIN playlist_history ON playlist_history.track_id = track.id
-	WHERE playlist_history.created > now() - interval '%d days'
-	GROUP BY genre.id`, days)
-
+func (d *DataAdapter) populateDataSet(query string) DataSet {
 	rows, err := d.Db.Query(query)
 	if err != nil {
-		log.Fatal("Tracks: %e", err)
+		log.Fatal("%e", err)
 	}
 	defer rows.Close()
 	dataset := DataSet{}
@@ -84,6 +65,46 @@ func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
 	}
 
 	return dataset
+}
+
+func (d *DataAdapter) GetTrackDataSet(genre string) DataSet {
+	query := fmt.Sprintf(`
+		SELECT count(track.spotify_uri), track.spotify_uri, track.name
+		FROM track
+		INNER JOIN artist_track ON artist_track.track_id = track.id
+		INNER JOIN artist_genre ON artist_genre.artist_id = artist_track.artist_id
+		INNER JOIN playlist_history ON playlist_history.track_id = track.id
+		WHERE artist_genre.grenre_id = '%s'
+		GROUP BY track.id
+		HAVING count(track.spotify_uri) > 1`, genre)
+
+	return d.populateDataSet(query)
+}
+
+func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
+	query := fmt.Sprintf(`
+		SELECT
+			(
+			SELECT (
+				SELECT array_length(array_agg(users), 1)
+				FROM (
+					SELECT DISTINCT users
+					FROM (
+						SELECT unnest(array_agg(playlist_history.user_id)) AS users) AS t1
+					) AS t2
+				) AS the_array
+			),
+			genre.id,
+			genre.name
+		FROM genre
+		INNER JOIN artist_genre ON genre.id = artist_genre.grenre_id
+		INNER JOIN artist_track ON artist_track.artist_id = artist_genre.artist_id
+		INNER JOIN track ON track.id = artist_track.track_id
+		INNER JOIN playlist_history ON playlist_history.track_id = track.id
+		WHERE playlist_history.created > now() - interval '%d days'
+		GROUP BY genre.id`, days)
+
+	return d.populateDataSet(query)
 }
 
 func (d *DataAdapter) Close() {
