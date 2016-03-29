@@ -9,7 +9,8 @@ import (
 )
 
 type DataObject struct {
-	Name  string
+	Id    string
+	Label string
 	Total int
 }
 
@@ -18,7 +19,7 @@ type DataSet struct {
 	Total int
 }
 
-func (ds *DataSet) append(d DataObject) {
+func (ds *DataSet) Append(d DataObject) {
 	ds.D = append(ds.D, d)
 	ds.Total += d.Total
 }
@@ -41,38 +42,7 @@ func (d *DataAdapter) Conn(s string) error {
 	return err
 }
 
-func (d *DataAdapter) Tracks() []Track {
-	rows, err := d.Db.Query("SELECT id, name, audio_summary, spotify_uri FROM track")
-	if err != nil {
-		log.Fatal("Tracks: %e", err)
-	}
-	defer rows.Close()
-
-	tracks := []Track{}
-	for rows.Next() {
-		var id sql.NullString
-		var name sql.NullString
-		var audioSummary sql.NullString
-		var spotifyUri sql.NullString
-
-		err = rows.Scan(&id, &name, &audioSummary, &spotifyUri)
-		if err != nil {
-			log.Fatal("Scan: %e", err)
-		}
-
-		track := Track{Id: id.String, Name: name.String, AudioSumary: audioSummary.String, SpotifyUri: spotifyUri.String}
-		tracks = append(tracks, track)
-	}
-
-	err = rows.Err() // get any error encountered during iteration
-	if err != nil {
-		log.Fatal("Scan: %e", err)
-	}
-
-	return tracks
-}
-
-func (d *DataAdapter) GetGenreWeight(days int) {
+func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
 	query := fmt.Sprintf(`
 	SELECT
 	  (
@@ -86,6 +56,7 @@ func (d *DataAdapter) GetGenreWeight(days int) {
 	      ) AS t2
 	    ) AS the_array
 	  ),
+	  genre.id,
 	  genre.name
 	FROM genre
 	INNER JOIN artist_genre ON genre.id = artist_genre.grenre_id
@@ -102,30 +73,17 @@ func (d *DataAdapter) GetGenreWeight(days int) {
 	defer rows.Close()
 	dataset := DataSet{}
 	for rows.Next() {
-		var weight int
-		var name string
-		err = rows.Scan(&weight, &name)
+		var total int
+		var id string
+		var label string
+		err = rows.Scan(&total, &id, &label)
 		if err != nil {
 			log.Fatal("Scan: %e", err)
 		}
-		dataset.append(DataObject{Name: name, Total: weight})
+		dataset.Append(DataObject{Id: id, Label: label, Total: total})
 	}
 
-	weights := dataset.GetWeights()
-	for i, a := range dataset.D {
-		log.Printf("%10d %10f %30s", a.Total, weights[i], a.Name)
-	}
-
-}
-
-func (d *DataAdapter) GetArtist(uri string) (Album, error) {
-	var id sql.NullString
-	query := fmt.Sprintf("SELECT id FROM artist WHERE spotify_uri = '%s' LIMIT 1", uri)
-	if err := d.Db.QueryRow(query).Scan(&id); err != nil {
-		log.Printf("GetArtist: %e", err)
-		return Album{}, err
-	}
-	return Album{Id: id.String}, nil
+	return dataset
 }
 
 func (d *DataAdapter) Close() {

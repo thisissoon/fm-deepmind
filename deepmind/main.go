@@ -57,7 +57,7 @@ func main() {
 		return
 	}
 
-	data.GetGenreWeight(14)
+	data.GetGenreDataSet(14)
 
 	// for _, t := range data.Tracks() {
 	// 	track := &SpotifyTrack{}
