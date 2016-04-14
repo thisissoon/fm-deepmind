@@ -1,39 +1,66 @@
 package main
 
 import (
-	"flag"
-	"log"
+	"os"
+	"os/signal"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/thisissoon/fm-deepmind/fm"
 	"github.com/thisissoon/fm-deepmind/fm_api"
 	"github.com/thisissoon/fm-deepmind/rnd"
+
+	"github.com/spf13/viper"
+	"github.com/thisissoon/fm-deepmind/socket"
 )
 
-var token = flag.String("token", "", "deepmind user")
-var db = flag.String("db", "", "soonfm database string")
-
 func main() {
+	viper.AutomaticEnv()
+	viper.SetDefault("USER_TOKEN", "")
+	viper.SetDefault("PERCEPTOR_ADDRESS", "perceptor.thisissoon.fm")
+	viper.SetDefault("SECRET", "")
+	viper.SetDefault("DB", "")
+
+	log.Printf("%s", viper.GetString("PERCEPTOR_ADDRESS"))
+
+	eventChannel := make(chan []byte)
+	endChannel := make(chan bool)
+
+	perceptor := socket.NewPerceptorService(
+		viper.GetString("PERCEPTOR_ADDRESS"),
+		viper.GetString("SECRET"),
+		eventChannel)
+	go perceptor.Run()
+
+	eventHandler := socket.NewHandler(eventChannel, endChannel)
+	go eventHandler.Run()
+
+	volumeManager := fm_api.FmApiManager{
+		Token: viper.GetString("USER_TOKEN"),
+	}
+
 	data := fm.DataAdapter{}
-	if err := data.Conn(*db); err != nil {
+	if err := data.Conn(viper.GetString("DB")); err != nil {
 		log.Fatal("Scan: %e", err)
 		return
 	}
 
-	for i := 0; i < 10; i++ {
+	anon := func() string {
 		genres := data.GetGenreDataSet(14)
-		genreWeights := genres.GetWeights()
 		genreIndex := rnd.Weight(genres.GetWeights())
 		d := genres.Get(genreIndex)
 
-		tracks := data.GetTrackDataSet(d.Id)
-		trackWeights := tracks.GetWeights()
-		trackIndex := rnd.Weight(trackWeights)
+		tracks := data.GetTrackDataSetBasedOnGenre(d.Id)
+		trackIndex := rnd.Weight(tracks.GetWeights())
 		track := tracks.Get(trackIndex)
-		log.Printf("%-9f %-50s %-9f %-10s", trackWeights[trackIndex], track.Label, genreWeights[genreIndex], d.Label)
-
-		if false {
-			go fm_api.AddTrack(track.Id, *token)
-		}
+		return track.Id
 	}
+	go volumeManager.Listen(endChannel, 3, anon)
 
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, os.Kill)
+	// Run forever unless we get a signal
+	for sig := range signals {
+		log.Println(sig)
+		os.Exit(1)
+	}
 }

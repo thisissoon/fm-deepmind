@@ -4,10 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 )
 
-func AddTrack(spotify_uri string, token string) {
+type FmApiManager struct {
+	Token string
+}
+
+func (m *FmApiManager) AddTrack(spotify_uri string) {
 
 	url := "https://api.thisissoon.fm/player/queue"
 
@@ -19,7 +25,7 @@ func AddTrack(spotify_uri string, token string) {
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(b))
-	req.Header.Set("Access-Token", token)
+	req.Header.Set("Access-Token", m.Token)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -28,4 +34,44 @@ func AddTrack(spotify_uri string, token string) {
 		panic(err)
 	}
 	defer resp.Body.Close()
+}
+
+func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
+	url := "https://api.thisissoon.fm/player/queue"
+
+	var err error
+	var queueItem []QueueItem
+
+	response, err := http.Get(url)
+	if err != nil {
+		log.Errorf("%s", err)
+	} else {
+		defer response.Body.Close()
+		contents, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Errorf("Cannot get response body: %s", err)
+		}
+
+		if err = json.Unmarshal(contents, &queueItem); err != nil {
+			log.Println("cannot unmarshal queue:", err)
+		}
+	}
+
+	return queueItem, err
+}
+
+func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
+	for {
+		<-c
+		queue, err := m.GetQueue()
+		if err != nil {
+			log.Printf("Error when fetching queue", err)
+			continue
+		}
+
+		for i := 0; i < (l - len(queue)); i++ {
+			log.Printf("Add track routine triggered")
+			go m.AddTrack(r())
+		}
+	}
 }
