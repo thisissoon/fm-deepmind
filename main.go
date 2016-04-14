@@ -34,7 +34,7 @@ func main() {
 	eventHandler := socket.NewHandler(eventChannel, endChannel)
 	go eventHandler.Run()
 
-	volumeManager := fm_api.FmApiManager{
+	fmApi := fm_api.FmApiManager{
 		Token: viper.GetString("USER_TOKEN"),
 	}
 
@@ -54,7 +54,7 @@ func main() {
 		track := tracks.Get(trackIndex)
 		return track.Id
 	}
-	go volumeManager.Listen(endChannel, 2, anon)
+	go fmApi.Listen(endChannel, 2, anon)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
