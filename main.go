@@ -1,23 +1,39 @@
 package main
 
 import (
-	"github.com/thisissoon/fm-deepmind/fm"
-	"github.com/thisissoon/fm-deepmind/rnd"
+	"flag"
 	"log"
+
+	"github.com/thisissoon/fm-deepmind/fm"
+	"github.com/thisissoon/fm-deepmind/fm_api"
+	"github.com/thisissoon/fm-deepmind/rnd"
 )
 
+var token = flag.String("token", "", "deepmind user")
+var db = flag.String("db", "", "soonfm database string")
+
 func main() {
-	connString := ""
 	data := fm.DataAdapter{}
-	if err := data.Conn(connString); err != nil {
+	if err := data.Conn(*db); err != nil {
 		log.Fatal("Scan: %e", err)
 		return
 	}
 
-	gengers := data.GetGenreDataSet(14)
-	d := gengers.Get(rnd.Weight(gengers.GetWeights()))
+	for i := 0; i < 10; i++ {
+		genres := data.GetGenreDataSet(14)
+		genreWeights := genres.GetWeights()
+		genreIndex := rnd.Weight(genres.GetWeights())
+		d := genres.Get(genreIndex)
 
-	tracks := data.GetTrackDataSet(d.Id)
-	track := tracks.Get(rnd.Weight(tracks.GetWeights()))
-	log.Printf("Picked track `%s` based on genre `%s`", track.Label, d.Label)
+		tracks := data.GetTrackDataSet(d.Id)
+		trackWeights := tracks.GetWeights()
+		trackIndex := rnd.Weight(trackWeights)
+		track := tracks.Get(trackIndex)
+		log.Printf("%-9f %-50s %-9f %-10s", trackWeights[trackIndex], track.Label, genreWeights[genreIndex], d.Label)
+
+		if false {
+			go fm_api.AddTrack(track.Id, *token)
+		}
+	}
+
 }
