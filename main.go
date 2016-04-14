@@ -54,7 +54,7 @@ func main() {
 		track := tracks.Get(trackIndex)
 		return track.Id
 	}
-	go volumeManager.Listen(endChannel, 3, anon)
+	go volumeManager.Listen(endChannel, 2, anon)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)

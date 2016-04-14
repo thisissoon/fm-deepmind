@@ -13,11 +13,10 @@ type FmApiManager struct {
 	Token string
 }
 
-func (m *FmApiManager) AddTrack(spotify_uri string) {
-
+func (m *FmApiManager) AddTrack(t string) {
 	url := "https://api.thisissoon.fm/player/queue"
 
-	user := &QueueTrack{Uri: spotify_uri}
+	user := &QueueTrack{Uri: t}
 	b, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
@@ -32,6 +31,9 @@ func (m *FmApiManager) AddTrack(spotify_uri string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
+	}
+	if resp.StatusCode == http.StatusCreated {
+		log.Printf("Song `%s` added to the queue", t)
 	}
 	defer resp.Body.Close()
 }
@@ -70,7 +72,6 @@ func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
 		}
 
 		for i := 0; i < (l - len(queue)); i++ {
-			log.Printf("Add track routine triggered")
 			go m.AddTrack(r())
 		}
 	}
