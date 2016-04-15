@@ -66,7 +66,7 @@ func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
 func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
 	for {
 		<-c
-		if time.Now().Hour() <= 18 {
+		if time.Now().Hour() <= 18 { // dont run after 6pm
 			queue, err := m.GetQueue()
 			if err != nil {
 				log.Printf("Error when fetching queue", err)
