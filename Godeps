@@ -1,3 +1,6 @@
 github.com/stretchr/testify/assert  master
 
 github.com/lib/pq
+github.com/spf13/viper
+github.com/gorilla/websocket
+github.com/Sirupsen/logrus
