@@ -7,6 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type FmApiManager struct {
@@ -65,14 +66,16 @@ func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
 func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
 	for {
 		<-c
-		queue, err := m.GetQueue()
-		if err != nil {
-			log.Printf("Error when fetching queue", err)
-			continue
-		}
+		if time.Now().Hour() <= 18 { // dont run after 6pm
+			queue, err := m.GetQueue()
+			if err != nil {
+				log.Printf("Error when fetching queue", err)
+				continue
+			}
 
-		for i := 0; i < (l - len(queue)); i++ {
-			go m.AddTrack(r())
+			for i := 0; i < (l - len(queue)); i++ {
+				go m.AddTrack(r())
+			}
 		}
 	}
 }
