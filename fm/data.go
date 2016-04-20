@@ -67,7 +67,7 @@ func (d *DataAdapter) populateDataSet(query string) DataSet {
 	return dataset
 }
 
-func (d *DataAdapter) GetTrackDataSet(genre string) DataSet {
+func (d *DataAdapter) GetTrackDataSetBasedOnGenre(genre string) DataSet {
 	query := fmt.Sprintf(`
 		SELECT count(track.spotify_uri), track.spotify_uri, track.name
 		FROM track
