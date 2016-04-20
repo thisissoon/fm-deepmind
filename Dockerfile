@@ -24,12 +24,12 @@ RUN git clone https://github.com/pote/gpm.git \
 # Set our final working dir to be where the source code lives
 WORKDIR /deepmind/src/github.com/thisissoon/fm-deepmind
 
-# Set the default entrypoint to be deepmind
-ENTRYPOINT ["deepmind"]
-
 # Copy source code into the deepmind src directory so Go can build the package
 COPY ./ /deepmind/src/github.com/thisissoon/fm-deepmind
 RUN gpm install
 
 # Install the go package
-RUN go install
+RUN go install main.go
+
+# Set the default entrypoint to be deepmind
+ENTRYPOINT main
