@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 
+	"errors"
 	"fmt"
 	"time"
 )
@@ -20,7 +21,7 @@ type AudioSummary struct {
 	Acousticness     float64   `json:"acousticness",csv:"acousticness"`
 	Instrumentalness float64   `json:"instrumentalness",csv:"instrumentalness"`
 	Mode             float64   `json:"mode",csv:"mode"`
-	Time_signature   float64   `json:"time_signature",csv:"time_signature"`
+	TimeSignature    float64   `json:"time_signature",csv:"time_signature"`
 	Duration         float64   `json:"duration",csv:"duration"`
 	Loudness         float64   `json:"loudness",csv:"loudness"`
 	Valence          float64   `json:"valence",csv:"valence"`
@@ -32,6 +33,7 @@ type DataObject struct {
 	Id    string
 	Label string
 	Total int
+	Meta  interface{}
 }
 
 type DataSet struct {
@@ -87,18 +89,44 @@ func (d *DataAdapter) populateDataSet(query string) DataSet {
 	return dataset
 }
 
-func (d *DataAdapter) GetTrackDataSetBasedOnGenre(genre string) DataSet {
+func (d *DataAdapter) GetTrackDataSetBasedOnGenre(genreId string) DataSet {
 	query := fmt.Sprintf(`
-		SELECT count(track.spotify_uri), track.spotify_uri, track.name
+		SELECT count(track.spotify_uri), track.spotify_uri, track.name, audio_summary
 		FROM track
 		INNER JOIN artist_track ON artist_track.track_id = track.id
 		INNER JOIN artist_genre ON artist_genre.artist_id = artist_track.artist_id
 		INNER JOIN playlist_history ON playlist_history.track_id = track.id
 		WHERE artist_genre.grenre_id = '%s'
 		GROUP BY track.id
-		HAVING count(track.spotify_uri) > 1`, genre)
+		HAVING count(track.spotify_uri) > 1`, genreId)
 
-	return d.populateDataSet(query)
+	rows, err := d.Db.Query(query)
+	if err != nil {
+		log.Fatal("%e", err)
+	}
+	defer rows.Close()
+	dataset := DataSet{}
+
+	for rows.Next() {
+		var total int
+		var id string
+		var label string
+		var as sql.NullString
+		err = rows.Scan(&total, &id, &label, &as)
+		if err != nil {
+			log.Fatal("Scan: %e", err)
+		}
+		if audioSummary, err := d.parseAudioSummary(as); err != nil {
+			dataset.Append(DataObject{
+				Id:    id,
+				Label: label,
+				Total: total,
+				Meta:  audioSummary,
+			})
+		}
+	}
+
+	return dataset
 }
 
 func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
@@ -125,6 +153,21 @@ func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
 		GROUP BY genre.id`, days)
 
 	return d.populateDataSet(query)
+}
+
+func (d *DataAdapter) parseAudioSummary(v sql.NullString) (AudioSummary, error) {
+	as := AudioSummary{}
+	if !v.Valid {
+		return as, errors.New("Value is not valid")
+	}
+	labelValue, err := v.Value()
+	val := labelValue.(string)
+	if val != "null" {
+		if err = json.Unmarshal([]byte(val), &as); err != nil {
+			return AudioSummary{}, err
+		}
+	}
+	return as, err
 }
 
 func (d *DataAdapter) GetAudioSummary() []AudioSummary {
