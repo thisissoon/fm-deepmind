@@ -2,11 +2,31 @@ package fm
 
 import (
 	"database/sql"
+	"encoding/json"
 	_ "github.com/lib/pq"
 	"log"
 
 	"fmt"
+	"time"
 )
+
+type AudioSummary struct {
+	Key              int       `json:"key",csv:"key"`
+	Tempo            float64   `json:"tempo",csv:"tempo"`
+	Energy           float64   `json:"energy",csv:"energy"`
+	Liveness         float64   `json:"liveness",csv:"liveness"`
+	AnalysisUrl      string    `json:"analysis_url",csv:"-"`
+	Speechiness      float64   `json:"speechiness",csv:"speechiness"`
+	Acousticness     float64   `json:"acousticness",csv:"acousticness"`
+	Instrumentalness float64   `json:"instrumentalness",csv:"instrumentalness"`
+	Mode             float64   `json:"mode",csv:"mode"`
+	Time_signature   float64   `json:"time_signature",csv:"time_signature"`
+	Duration         float64   `json:"duration",csv:"duration"`
+	Loudness         float64   `json:"loudness",csv:"loudness"`
+	Valence          float64   `json:"valence",csv:"valence"`
+	Danceability     float64   `json:"danceability",csv:"danceability"`
+	Timestamp        time.Time `csv:"timestamp"`
+}
 
 type DataObject struct {
 	Id    string
@@ -105,6 +125,39 @@ func (d *DataAdapter) GetGenreDataSet(days int) DataSet {
 		GROUP BY genre.id`, days)
 
 	return d.populateDataSet(query)
+}
+
+func (d *DataAdapter) GetAudioSummary() []AudioSummary {
+	audioSummaries := []AudioSummary{}
+
+	query := `
+		SELECT audio_summary, created
+		FROM track WHERE audio_summary is not null`
+	rows, err := d.Db.Query(query)
+	if err != nil {
+		log.Fatal("%e", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var label sql.NullString
+		var timestamp time.Time
+		err = rows.Scan(&label, &timestamp)
+		if err != nil {
+			log.Fatal("Scan: %e", err)
+		} else {
+			labelValue, err := label.Value()
+			val := labelValue.(string)
+			if val != "null" {
+				audioSummary := AudioSummary{Timestamp: timestamp}
+				if err = json.Unmarshal([]byte(val), &audioSummary); err != nil {
+					log.Println(err)
+				} else {
+					audioSummaries = append(audioSummaries, audioSummary)
+				}
+			}
+		}
+	}
+	return audioSummaries
 }
 
 func (d *DataAdapter) Close() {
