@@ -82,11 +82,14 @@ func (ds *DataSet) Get(d int) DataObject {
 	return ds.D[d]
 }
 
-type GenreMatrix struct {
+// Holds AudioSummary objects in a weekday and hour matrix to easily pick a
+// certain AudioSummary quartile in a certain time and day
+type AudioSumaryMatrix struct {
 	M [][]AudioSummaryQuartile
 }
 
-func (m *GenreMatrix) Populate(a []AudioSummary) {
+// Populate AudioSumary matrix from list of AudioSummary objects
+func (m *AudioSumaryMatrix) Populate(a []AudioSummary) {
 	week := make([][]DynamicList, 7)
 	for i := range week {
 		week[i] = make([]DynamicList, 24)
@@ -137,4 +140,8 @@ func (m *GenreMatrix) Populate(a []AudioSummary) {
 			}
 		}
 	}
+}
+
+func (m *AudioSumaryMatrix) GetQuartile(t time.Time) AudioSummaryQuartile {
+	return m.M[t.Weekday()][t.Hour()]
 }

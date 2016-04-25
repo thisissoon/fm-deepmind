@@ -45,8 +45,8 @@ func TestSumOfWeighShouleBeZero(t *testing.T) {
 	assert.Equal(t, float64(1), weights[0]+weights[1]+weights[2])
 }
 
-func TestGenreMatrixTempoMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixTempoMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -70,8 +70,8 @@ func TestGenreMatrixTempoMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Tempo)
 }
 
-func TestGenreMatrixLivenessMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixLivenessMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -95,8 +95,8 @@ func TestGenreMatrixLivenessMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Liveness)
 }
 
-func TestGenreMatrixSpeechinessMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixSpeechinessMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -120,8 +120,8 @@ func TestGenreMatrixSpeechinessMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Speechiness)
 }
 
-func TestGenreMatrixAcousticnessMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixAcousticnessMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -145,8 +145,8 @@ func TestGenreMatrixAcousticnessMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Acousticness)
 }
 
-func TestGenreMatrixInstrumentalnessMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixInstrumentalnessMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -170,8 +170,8 @@ func TestGenreMatrixInstrumentalnessMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Instrumentalness)
 }
 
-func TestGenreMatrixLoudnessMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixLoudnessMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -195,8 +195,8 @@ func TestGenreMatrixLoudnessMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Loudness)
 }
 
-func TestGenreMatrixValenceMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixValenceMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -220,8 +220,8 @@ func TestGenreMatrixValenceMediam(t *testing.T) {
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Valence)
 }
 
-func TestGenreMatrixDanceabilityMediam(t *testing.T) {
-	gm := GenreMatrix{}
+func TestAudioSumaryMatrixDanceabilityMediam(t *testing.T) {
+	gm := AudioSumaryMatrix{}
 
 	audioSummaries := []AudioSummary{
 		AudioSummary{
@@ -243,4 +243,38 @@ func TestGenreMatrixDanceabilityMediam(t *testing.T) {
 	}
 	gm.Populate(audioSummaries)
 	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), gm.M[1][8].Danceability)
+}
+
+func TestAudioSumaryMatrixGetExistingQuartile(t *testing.T) {
+	gm := AudioSumaryMatrix{}
+
+	audioSummaries := []AudioSummary{
+		AudioSummary{
+			Timestamp:    time.Date(2016, time.April, 25, 8, 0, 0, 0, time.UTC),
+			Danceability: 0.1,
+		},
+		AudioSummary{
+			Timestamp:    time.Date(2016, time.April, 25, 8, 30, 0, 0, time.UTC),
+			Danceability: 0.3,
+		},
+		AudioSummary{
+			Timestamp:    time.Date(2016, time.May, 25, 9, 0, 0, 0, time.UTC),
+			Danceability: 0.4,
+		},
+		AudioSummary{
+			Timestamp:    time.Date(2016, time.May, 3, 8, 0, 0, 0, time.UTC),
+			Danceability: 0.4,
+		},
+	}
+	gm.Populate(audioSummaries)
+	quartile := gm.GetQuartile(time.Date(2016, time.April, 25, 8, 15, 0, 0, time.UTC))
+	assert.Equal(t, math.GetQuartile([]float64{0.1, 0.3}), quartile.Danceability)
+}
+
+func TestAudioSumaryMatrixGetNonExistingQuartile(t *testing.T) {
+	gm := AudioSumaryMatrix{}
+	gm.Populate([]AudioSummary{})
+
+	quartile := gm.GetQuartile(time.Now())
+	assert.Equal(t, math.Quartile{0, 0, 0}, quartile.Danceability)
 }

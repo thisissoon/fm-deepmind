@@ -72,6 +72,7 @@ func (p *PerceptorService) headers() http.Header {
 
 // Creates a new PerceptorService
 func NewPerceptorService(addr string, secret string, channel chan []byte) *PerceptorService {
+	log.Printf("Creating event listener instance")
 	return &PerceptorService{
 		channel: channel,
 		addr:    addr,

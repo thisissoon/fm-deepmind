@@ -3,13 +3,22 @@ package fm
 import (
 	"database/sql"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	_ "github.com/lib/pq"
-	"log"
 
 	"errors"
 	"fmt"
 	"time"
 )
+
+func NewDataAdapter(u string) *DataAdapter {
+	dataAdapter := DataAdapter{}
+	log.Printf("Creating data adapter instance")
+	if err := dataAdapter.Conn(u); err != nil {
+		log.Fatal("Scan: %e", err)
+	}
+	return &dataAdapter
+}
 
 type DataAdapter struct {
 	Db *sql.DB
