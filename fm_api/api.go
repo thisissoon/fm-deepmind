@@ -3,12 +3,18 @@ package fm_api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
+
+// return current london time
+func getLondonTime() time.Time {
+	location, _ := time.LoadLocation("Europe/London")
+	now := time.Now()
+	return now.In(location)
+}
 
 type FmApiManager struct {
 	Token string
@@ -20,7 +26,7 @@ func (m *FmApiManager) AddTrack(t string) {
 	user := &QueueTrack{Uri: t}
 	b, err := json.Marshal(user)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
 
@@ -39,34 +45,38 @@ func (m *FmApiManager) AddTrack(t string) {
 	defer resp.Body.Close()
 }
 
-func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
-	url := "https://api.thisissoon.fm/player/queue"
-
+func (m *FmApiManager) parseQueue(c []byte) ([]QueueItem, error) {
 	var err error
 	var queueItem []QueueItem
+
+	if err = json.Unmarshal(c, &queueItem); err != nil {
+		log.Println("cannot unmarshal queue:", err)
+	}
+	return queueItem, err
+}
+
+func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
+	url := "https://api.thisissoon.fm/player/queue"
 
 	response, err := http.Get(url)
 	if err != nil {
 		log.Errorf("%s", err)
 	} else {
 		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
+		content, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			log.Errorf("Cannot get response body: %s", err)
 		}
-
-		if err = json.Unmarshal(contents, &queueItem); err != nil {
-			log.Println("cannot unmarshal queue:", err)
-		}
+		return m.parseQueue(content)
 	}
 
-	return queueItem, err
+	return nil, err
 }
 
 func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
 	for {
 		<-c
-		if time.Now().Hour() <= 18 { // dont run after 6pm
+		if getLondonTime().Hour() < 18 { // dont run after 6pm
 			queue, err := m.GetQueue()
 			if err != nil {
 				log.Printf("Error when fetching queue", err)
