@@ -16,6 +16,14 @@ func (q *Quartile) HasIn(f float64) bool {
 }
 
 func Median(l []float64) float64 {
+	switch len(l) {
+	case 0:
+		return 0
+	case 1:
+		return l[0]
+	case 2:
+		return (l[0] + l[1]) / 2
+	}
 	sort.Float64s(l)
 	lenght := float64(len(l))
 	isOdd := math.Mod(lenght, float64(2)) == 1

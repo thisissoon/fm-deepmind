@@ -11,53 +11,6 @@ import (
 	"time"
 )
 
-type AudioSummary struct {
-	Key              int       `json:"key",csv:"key"`
-	Tempo            float64   `json:"tempo",csv:"tempo"`
-	Energy           float64   `json:"energy",csv:"energy"`
-	Liveness         float64   `json:"liveness",csv:"liveness"`
-	AnalysisUrl      string    `json:"analysis_url",csv:"-"`
-	Speechiness      float64   `json:"speechiness",csv:"speechiness"`
-	Acousticness     float64   `json:"acousticness",csv:"acousticness"`
-	Instrumentalness float64   `json:"instrumentalness",csv:"instrumentalness"`
-	Mode             float64   `json:"mode",csv:"mode"`
-	TimeSignature    float64   `json:"time_signature",csv:"time_signature"`
-	Duration         float64   `json:"duration",csv:"duration"`
-	Loudness         float64   `json:"loudness",csv:"loudness"`
-	Valence          float64   `json:"valence",csv:"valence"`
-	Danceability     float64   `json:"danceability",csv:"danceability"`
-	Timestamp        time.Time `csv:"timestamp"`
-}
-
-type DataObject struct {
-	Id    string
-	Label string
-	Total int
-	Meta  interface{}
-}
-
-type DataSet struct {
-	D     []DataObject
-	Total int
-}
-
-func (ds *DataSet) Append(d DataObject) {
-	ds.D = append(ds.D, d)
-	ds.Total += d.Total
-}
-
-func (ds *DataSet) GetWeights() []float64 {
-	weights := []float64{}
-	for _, d := range ds.D {
-		weights = append(weights, float64(d.Total)/float64(ds.Total))
-	}
-	return weights
-}
-
-func (ds *DataSet) Get(d int) DataObject {
-	return ds.D[d]
-}
-
 type DataAdapter struct {
 	Db *sql.DB
 }
