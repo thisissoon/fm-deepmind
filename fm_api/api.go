@@ -15,6 +15,7 @@ func getLondonTime() time.Time {
 	now := time.Now()
 	if err != nil {
 		log.Errorf("Cannot load location %v", err)
+		return now
 	}
 	return now.In(location)
 }
