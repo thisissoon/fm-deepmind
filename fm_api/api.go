@@ -11,8 +11,12 @@ import (
 
 // return current london time
 func getLondonTime() time.Time {
-	location, _ := time.LoadLocation("Europe/London")
+	location, err := time.LoadLocation("Europe/London")
 	now := time.Now()
+	if err != nil {
+		log.Errorf("Cannot load location %v", err)
+		return now
+	}
 	return now.In(location)
 }
 
