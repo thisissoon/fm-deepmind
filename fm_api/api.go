@@ -10,14 +10,14 @@ import (
 )
 
 // return current london time
-func getLondonTime() time.Time {
+func getLondonTime() (time.Time, error) {
 	location, err := time.LoadLocation("Europe/London")
 	now := time.Now()
 	if err != nil {
 		log.Errorf("Cannot load location %v", err)
-		return now
+		return now, err
 	}
-	return now.In(location)
+	return now.In(location), nil
 }
 
 type FmApiManager struct {
@@ -80,7 +80,8 @@ func (m *FmApiManager) GetQueue() ([]QueueItem, error) {
 func (m *FmApiManager) Listen(c chan bool, l int, r func() string) {
 	for {
 		<-c
-		if getLondonTime().Hour() < 18 { // dont run after 6pm
+		time, _ := getLondonTime()
+		if time.Hour() < 18 { // dont run after 6pm
 			queue, err := m.GetQueue()
 			if err != nil {
 				log.Printf("Error when fetching queue", err)

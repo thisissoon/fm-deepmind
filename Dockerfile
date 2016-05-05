@@ -1,5 +1,5 @@
 # Ubuntu just works
-FROM alpine:3.2
+FROM alpine:3.3
 MAINTAINER SOON_ <dorks@thisissoon.com>
 
 ## Environment Variables
@@ -8,18 +8,23 @@ ENV GOBIN /usr/local/bin
 ENV PATH $PATH:$GOPATH/bin
 
 # OS Dependencies
-RUN echo 'http://dl-4.alpinelinux.org/alpine/edge/main' >> /etc/apk/repositories \
-    && apk update && apk add go go-tools git build-base ca-certificates make bash && rm -rf /var/cache/apk/*
+RUN apk update && apk add go \
+        tzdata \
+        go-tools \
+        git \
+        ca-certificates \
+        make \
+        bash \
+        wget \
+    && rm -rf /var/cache/apk/*
 
 # Set working Directory
 WORKDIR /deepmind
 
 # GPM (Go Package Manager)
-RUN git clone https://github.com/pote/gpm.git \
-    && cd gpm \
-    && git checkout v1.3.2 \
-    && ./configure \
-    && make install
+RUN wget https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm \
+        && chmod +x gpm \
+        && mv gpm /usr/local/bin
 
 # Set our final working dir to be where the source code lives
 WORKDIR /deepmind/src/github.com/thisissoon/fm-deepmind

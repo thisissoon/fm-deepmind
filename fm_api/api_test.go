@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetLondonTime(t *testing.T) {
+	_, err := getLondonTime()
+	assert.Nil(t, err)
+}
+
 func TestParseQueue(t *testing.T) {
 	body := `[
 	    {
