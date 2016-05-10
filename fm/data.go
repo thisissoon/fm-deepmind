@@ -135,9 +135,7 @@ func (d *DataAdapter) parseAudioSummary(v sql.NullString) (AudioSummary, error) 
 func (d *DataAdapter) GetAudioSummary() []AudioSummary {
 	audioSummaries := []AudioSummary{}
 
-	query := `
-		SELECT audio_summary, created
-		FROM track WHERE audio_summary is not null`
+	query := `SELECT audio_summary, created FROM track WHERE audio_summary is not null`
 	rows, err := d.Db.Query(query)
 	if err != nil {
 		log.Fatal("%e", err)

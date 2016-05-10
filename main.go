@@ -16,6 +16,8 @@ func main() {
 	viper.SetDefault("EVENT_SERVICE", "")
 	viper.SetDefault("SECRET", "")
 	viper.SetDefault("DB", "")
+	viper.SetDefault("MIN_TRACKS", 2)
+	viper.SetDefault("LAST_TRACK_AT", 18)
 
 	deepmind := deepmind.NewDeepmind(
 		deepmind.Config{
@@ -23,8 +25,11 @@ func main() {
 			EventService: viper.GetString("EVENT_SERVICE"),
 			Secret:       viper.GetString("SECRET"),
 			Db:           viper.GetString("DB"),
+			MinTracks:    viper.GetInt("MIN_TRACKS"),
+			LastTrackAt:  viper.GetInt("LAST_TRACK_AT"),
 		},
 	)
+
 	deepmind.Run()
 
 	signals := make(chan os.Signal, 1)
