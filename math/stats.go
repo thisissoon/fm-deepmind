@@ -54,7 +54,7 @@ func GetQuartile(l []float64) Quartile {
 }
 
 func Average(l []float64) float64 {
-	total := 0.0
+	total := float64(0)
 	for _, v := range l {
 		total += v
 	}

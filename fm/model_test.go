@@ -278,3 +278,111 @@ func TestAudioSumaryMatrixGetNonExistingQuartile(t *testing.T) {
 	quartile := gm.GetQuartile(time.Now())
 	assert.Equal(t, math.Quartile{0, 0, 0}, quartile.Danceability)
 }
+
+func TestAudioSummaryWeightsPopulateTempo(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Tempo: 1},
+		AudioSummary{Tempo: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Tempo)
+}
+
+func TestAudioSummaryWeightsPopulateEnergy(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Energy: 1},
+		AudioSummary{Energy: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Energy)
+}
+
+func TestAudioSummaryWeightsPopulateLiveness(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Liveness: 1},
+		AudioSummary{Liveness: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Liveness)
+}
+
+func TestAudioSummaryWeightsPopulateSpeechiness(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Speechiness: 1},
+		AudioSummary{Speechiness: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Speechiness)
+}
+
+func TestAudioSummaryWeightsPopulateAcousticness(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Acousticness: 1},
+		AudioSummary{Acousticness: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Acousticness)
+}
+
+func TestAudioSummaryWeightsPopulateInstrumentalness(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Instrumentalness: 1},
+		AudioSummary{Instrumentalness: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Instrumentalness)
+}
+
+func TestAudioSummaryWeightsPopulateLoudness(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Loudness: 1},
+		AudioSummary{Loudness: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Loudness)
+}
+
+func TestAudioSummaryWeightsPopulateValence(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Valence: 1},
+		AudioSummary{Valence: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Valence)
+}
+
+func TestAudioSummaryWeightsPopulateDanceability(t *testing.T) {
+	a := []AudioSummary{
+		AudioSummary{Danceability: 1},
+		AudioSummary{Danceability: 5},
+	}
+
+	w := AudioSummaryWeights{}
+	w.Populate(a)
+
+	assert.Equal(t, float64(4), w.Danceability)
+}

@@ -58,6 +58,39 @@ type AudioSummaryWeights struct {
 	Danceability     float64
 }
 
+func (a *AudioSummaryWeights) Populate(l []AudioSummary) {
+	a.Tempo = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Tempo
+	}))
+	a.Energy = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Energy
+	}))
+	a.Energy = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Energy
+	}))
+	a.Liveness = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Liveness
+	}))
+	a.Speechiness = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Speechiness
+	}))
+	a.Acousticness = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Acousticness
+	}))
+	a.Instrumentalness = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Instrumentalness
+	}))
+	a.Loudness = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Loudness
+	}))
+	a.Valence = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Valence
+	}))
+	a.Danceability = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
+		return v.Danceability
+	}))
+}
+
 type DynamicList struct {
 	L []AudioSummary
 }
