@@ -94,25 +94,25 @@ func (a *AudioSummaryWeights) Populate(l []AudioSummary) {
 
 func (a *AudioSummaryWeights) normalise() {
 	l := []float64{
-		a.Tempo,
+		// a.Tempo,
 		a.Energy,
 		a.Liveness,
 		a.Speechiness,
 		a.Acousticness,
 		a.Instrumentalness,
-		a.Loudness,
+		// a.Loudness,
 		a.Valence,
 		a.Danceability,
 	}
 	s := math.Sum(l)
 
-	a.Tempo = a.Tempo / s
+	// a.Tempo = a.Tempo / s
 	a.Energy = a.Energy / s
 	a.Liveness = a.Liveness / s
 	a.Speechiness = a.Speechiness / s
 	a.Acousticness = a.Acousticness / s
 	a.Instrumentalness = a.Instrumentalness / s
-	a.Loudness = a.Loudness / s
+	// a.Loudness = a.Loudness / s
 	a.Valence = a.Valence / s
 	a.Danceability = a.Danceability / s
 }
@@ -126,10 +126,12 @@ func (dl *DynamicList) Add(i AudioSummary) {
 }
 
 type DataObject struct {
-	Id    string
-	Label string
-	Total int
-	Meta  interface{}
+	Id      string
+	Label   string
+	Total   int
+	Weight  float64
+	Endorse float64
+	Meta    interface{}
 }
 
 type DataSet struct {
@@ -137,15 +139,28 @@ type DataSet struct {
 	Total int
 }
 
+func (ds *DataSet) Endorse(f func(DataObject) float64) {
+	for i := 0; i < len(ds.D); i++ {
+		ds.D[i].Endorse = f(ds.D[i])
+	}
+}
+
 func (ds *DataSet) Append(d DataObject) {
 	ds.D = append(ds.D, d)
 	ds.Total += d.Total
+	ds.CalculateWeights()
+}
+
+func (ds *DataSet) CalculateWeights() {
+	for i := 0; i < len(ds.D); i++ {
+		ds.D[i].Weight = float64(ds.D[i].Total) / float64(ds.Total)
+	}
 }
 
 func (ds *DataSet) GetWeights() []float64 {
 	weights := []float64{}
 	for _, d := range ds.D {
-		weights = append(weights, float64(d.Total)/float64(ds.Total))
+		weights = append(weights, d.Weight)
 	}
 	return weights
 }
@@ -179,9 +194,9 @@ func (m *AudioSumaryMatrix) Populate(a []AudioSummary) {
 		m.M[i] = make([]AudioSummaryQuartile, 24)
 	}
 
-	for w, hours := range week {
+	for d, hours := range week {
 		for h, hour := range hours {
-			m.M[w][h] = AudioSummaryQuartile{
+			m.M[d][h] = AudioSummaryQuartile{
 				Tempo: math.GetQuartile(Map(hour.L, func(v AudioSummary) float64 {
 					return v.Tempo
 				})),

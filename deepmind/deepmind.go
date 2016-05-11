@@ -19,6 +19,14 @@ func getLondonTime() time.Time {
 	return now.In(location)
 }
 
+func Map(vs []fm.AudioSummaryQuartile, f func(fm.AudioSummaryQuartile) fm.AudioSummary) []fm.AudioSummary {
+	vsm := make([]fm.AudioSummary, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
+}
+
 type Config struct {
 	UserToken    string
 	EventService string
@@ -31,20 +39,22 @@ type Config struct {
 func NewDeepmind(c Config) *Deepmind {
 	log.Printf("Creating Deepmind instance")
 	return &Deepmind{
-		config:            c,
-		eventChannel:      make(chan []byte),
-		endChannel:        make(chan bool),
-		data:              fm.NewDataAdapter(c.Db),
-		audioSumaryMatrix: &fm.AudioSumaryMatrix{},
+		config:              c,
+		eventChannel:        make(chan []byte),
+		endChannel:          make(chan bool),
+		data:                fm.NewDataAdapter(c.Db),
+		audioSumaryMatrix:   &fm.AudioSumaryMatrix{},
+		audioSummaryWeights: &fm.AudioSummaryWeights{},
 	}
 }
 
 type Deepmind struct {
-	config            Config
-	eventChannel      chan []byte
-	endChannel        chan bool
-	data              *fm.DataAdapter
-	audioSumaryMatrix *fm.AudioSumaryMatrix
+	config              Config
+	eventChannel        chan []byte
+	endChannel          chan bool
+	data                *fm.DataAdapter
+	audioSumaryMatrix   *fm.AudioSumaryMatrix
+	audioSummaryWeights *fm.AudioSummaryWeights
 }
 
 func (d *Deepmind) getRandomTrackUri() string {
@@ -70,23 +80,69 @@ func (d *Deepmind) runPerceptorListener() {
 }
 
 func (d *Deepmind) Run() {
-	d.runPerceptorListener()
-
 	// push tracks into the queue
 	fmApi := fm_api.FmApiManager{Token: d.config.UserToken}
 	if false {
+		d.runPerceptorListener()
 		go d.Listen(fmApi, d.getRandomTrackUri)
 	}
 
-	// synchronise echonest stats
-	d.ScheduleAction(cronexpr.MustParse("* * * * * * *"), func() {
+	go d.PopulateAudioSumaryMatrix()
+	d.ScheduleAction(cronexpr.MustParse("0 0 1 * *"), func() {
 		d.PopulateAudioSumaryMatrix()
-		log.Printf("%s", d.audioSumaryMatrix.GetQuartile(getLondonTime()))
+	})
+
+	d.ScheduleAction(cronexpr.MustParse("0 0 * * *"), func() {
+		d.PopulateAudioSummaryWeights()
 	})
 }
 
 func (d *Deepmind) PopulateAudioSumaryMatrix() {
-	d.audioSumaryMatrix.Populate(d.data.GetAudioSummary())
+	a := d.data.GetAudioSummary()
+	d.audioSumaryMatrix.Populate(a)
+	d.PopulateAudioSummaryWeights()
+}
+
+func (d *Deepmind) PopulateAudioSummaryWeights() {
+	today := time.Now().Weekday()
+	audioSumaryMedians := Map(d.audioSumaryMatrix.M[today], func(v fm.AudioSummaryQuartile) fm.AudioSummary {
+		return fm.AudioSummary{
+			Energy:           v.Energy.Second,
+			Liveness:         v.Liveness.Second,
+			Speechiness:      v.Speechiness.Second,
+			Acousticness:     v.Acousticness.Second,
+			Instrumentalness: v.Instrumentalness.Second,
+			Valence:          v.Valence.Second,
+			Danceability:     v.Danceability.Second,
+		}
+	})
+	d.audioSummaryWeights.Populate(audioSumaryMedians)
+}
+
+func (d *Deepmind) AudioSummaryEndorse(o fm.DataObject, q fm.AudioSummaryQuartile) float64 {
+	endorse := float64(.0)
+	if q.Energy.HasIn(o.Meta.(fm.AudioSummary).Energy) {
+		endorse += d.audioSummaryWeights.Energy
+	}
+	if q.Liveness.HasIn(o.Meta.(fm.AudioSummary).Liveness) {
+		endorse += d.audioSummaryWeights.Liveness
+	}
+	if q.Speechiness.HasIn(o.Meta.(fm.AudioSummary).Speechiness) {
+		endorse += d.audioSummaryWeights.Speechiness
+	}
+	if q.Acousticness.HasIn(o.Meta.(fm.AudioSummary).Acousticness) {
+		endorse += d.audioSummaryWeights.Acousticness
+	}
+	if q.Instrumentalness.HasIn(o.Meta.(fm.AudioSummary).Instrumentalness) {
+		endorse += d.audioSummaryWeights.Instrumentalness
+	}
+	if q.Valence.HasIn(o.Meta.(fm.AudioSummary).Valence) {
+		endorse += d.audioSummaryWeights.Valence
+	}
+	if q.Danceability.HasIn(o.Meta.(fm.AudioSummary).Danceability) {
+		endorse += d.audioSummaryWeights.Danceability
+	}
+	return endorse
 }
 
 func (d *Deepmind) Listen(m fm_api.FmApiManager, r func() string) {
