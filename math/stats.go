@@ -61,6 +61,14 @@ func Average(l []float64) float64 {
 	return total / float64(len(l))
 }
 
+func Sum(l []float64) float64 {
+	sum := float64(0)
+	for _, v := range l {
+		sum += v
+	}
+	return sum
+}
+
 func SumSq(l []float64) float64 {
 	sum := float64(0)
 	for _, v := range l {

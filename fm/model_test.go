@@ -281,108 +281,108 @@ func TestAudioSumaryMatrixGetNonExistingQuartile(t *testing.T) {
 
 func TestAudioSummaryWeightsPopulateTempo(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Tempo: 1},
-		AudioSummary{Tempo: 5},
+		AudioSummary{Tempo: 1, Energy: 1},
+		AudioSummary{Tempo: 5, Energy: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Tempo)
+	assert.Equal(t, float64(.8), w.Tempo)
 }
 
 func TestAudioSummaryWeightsPopulateEnergy(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Energy: 1},
-		AudioSummary{Energy: 5},
+		AudioSummary{Energy: 1, Tempo: 1},
+		AudioSummary{Energy: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Energy)
+	assert.Equal(t, float64(.8), w.Energy)
 }
 
 func TestAudioSummaryWeightsPopulateLiveness(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Liveness: 1},
-		AudioSummary{Liveness: 5},
+		AudioSummary{Liveness: 1, Tempo: 1},
+		AudioSummary{Liveness: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Liveness)
+	assert.Equal(t, float64(.8), w.Liveness)
 }
 
 func TestAudioSummaryWeightsPopulateSpeechiness(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Speechiness: 1},
-		AudioSummary{Speechiness: 5},
+		AudioSummary{Speechiness: 1, Tempo: 1},
+		AudioSummary{Speechiness: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Speechiness)
+	assert.Equal(t, float64(.8), w.Speechiness)
 }
 
 func TestAudioSummaryWeightsPopulateAcousticness(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Acousticness: 1},
-		AudioSummary{Acousticness: 5},
+		AudioSummary{Acousticness: 1, Tempo: 1},
+		AudioSummary{Acousticness: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Acousticness)
+	assert.Equal(t, float64(.8), w.Acousticness)
 }
 
 func TestAudioSummaryWeightsPopulateInstrumentalness(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Instrumentalness: 1},
-		AudioSummary{Instrumentalness: 5},
+		AudioSummary{Instrumentalness: 1, Tempo: 1},
+		AudioSummary{Instrumentalness: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Instrumentalness)
+	assert.Equal(t, float64(.8), w.Instrumentalness)
 }
 
 func TestAudioSummaryWeightsPopulateLoudness(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Loudness: 1},
-		AudioSummary{Loudness: 5},
+		AudioSummary{Loudness: 1, Tempo: 1},
+		AudioSummary{Loudness: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Loudness)
+	assert.Equal(t, float64(.8), w.Loudness)
 }
 
 func TestAudioSummaryWeightsPopulateValence(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Valence: 1},
-		AudioSummary{Valence: 5},
+		AudioSummary{Valence: 1, Tempo: 1},
+		AudioSummary{Valence: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Valence)
+	assert.Equal(t, float64(.8), w.Valence)
 }
 
 func TestAudioSummaryWeightsPopulateDanceability(t *testing.T) {
 	a := []AudioSummary{
-		AudioSummary{Danceability: 1},
-		AudioSummary{Danceability: 5},
+		AudioSummary{Danceability: 1, Tempo: 1},
+		AudioSummary{Danceability: 5, Tempo: 3},
 	}
 
 	w := AudioSummaryWeights{}
 	w.Populate(a)
 
-	assert.Equal(t, float64(4), w.Danceability)
+	assert.Equal(t, float64(.8), w.Danceability)
 }

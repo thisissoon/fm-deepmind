@@ -89,6 +89,32 @@ func (a *AudioSummaryWeights) Populate(l []AudioSummary) {
 	a.Danceability = math.StandardDeviation(Map(l, func(v AudioSummary) float64 {
 		return v.Danceability
 	}))
+	a.normalise()
+}
+
+func (a *AudioSummaryWeights) normalise() {
+	l := []float64{
+		a.Tempo,
+		a.Energy,
+		a.Liveness,
+		a.Speechiness,
+		a.Acousticness,
+		a.Instrumentalness,
+		a.Loudness,
+		a.Valence,
+		a.Danceability,
+	}
+	s := math.Sum(l)
+
+	a.Tempo = a.Tempo / s
+	a.Energy = a.Energy / s
+	a.Liveness = a.Liveness / s
+	a.Speechiness = a.Speechiness / s
+	a.Acousticness = a.Acousticness / s
+	a.Instrumentalness = a.Instrumentalness / s
+	a.Loudness = a.Loudness / s
+	a.Valence = a.Valence / s
+	a.Danceability = a.Danceability / s
 }
 
 type DynamicList struct {
