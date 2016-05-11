@@ -52,3 +52,24 @@ func GetQuartile(l []float64) Quartile {
 	}
 	return q
 }
+
+func Average(l []float64) float64 {
+	total := 0.0
+	for _, v := range l {
+		total += v
+	}
+	return total / float64(len(l))
+}
+
+func SumSq(l []float64) float64 {
+	sum := float64(0)
+	for _, v := range l {
+		sum += v * v
+	}
+	return sum
+}
+
+func StandardDeviation(l []float64) float64 {
+	avg := Average(l)
+	return SumSq(l)/float64(len(l)) - avg*avg
+}

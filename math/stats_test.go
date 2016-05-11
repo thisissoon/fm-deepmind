@@ -45,3 +45,31 @@ func TestQuartileHasIn(t *testing.T) {
 
 	assert.Equal(t, false, q.HasIn(15))
 }
+
+func TestStandardDeviationDifferentNumbersInSet(t *testing.T) {
+	l := []float64{1, 2, 3, 4, 5, 6, 7}
+	o := StandardDeviation(l)
+
+	assert.Equal(t, float64(4), o)
+}
+
+func TestStandardDeviationSameNumbersInSet(t *testing.T) {
+	l := []float64{1, 1, 1, 1, 1}
+	o := StandardDeviation(l)
+
+	assert.Equal(t, float64(0), o)
+}
+
+func TestAverage(t *testing.T) {
+	l := []float64{1, 2, 3, 4, 5, 6, 7}
+	a := Average(l)
+
+	assert.Equal(t, float64(4), a)
+}
+
+func TestSumSq(t *testing.T) {
+	l := []float64{1, 2, 3, 4, 5, 6, 7}
+	a := SumSq(l)
+
+	assert.Equal(t, float64(140), a)
+}

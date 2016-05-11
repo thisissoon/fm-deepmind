@@ -45,6 +45,19 @@ type AudioSummaryQuartile struct {
 	Danceability     math.Quartile
 }
 
+// Weights for AudioSumary from set of tracks
+type AudioSummaryWeights struct {
+	Tempo            float64
+	Energy           float64
+	Liveness         float64
+	Speechiness      float64
+	Acousticness     float64
+	Instrumentalness float64
+	Loudness         float64
+	Valence          float64
+	Danceability     float64
+}
+
 type DynamicList struct {
 	L []AudioSummary
 }
