@@ -1,45 +1,60 @@
 package fm
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDataSetAppend(t *testing.T) {
-	ds := DataSet{}
+func TestParseAudioSumary(t *testing.T) {
+	v := sql.NullString{
+		String: `
+			{
+				"key": 5,
+				"tempo": 88.088,
+				"energy": 0.4246929822221389,
+				"liveness": 0.11306411657392115,
+				"analysis_url": "",
+				"speechiness": 0.06528033930143728,
+				"acousticness": 0.32661968843315015,
+				"instrumentalness": 1.7090341899105053e-07,
+				"mode": 0,
+				"time_signature": 4,
+				"duration": 284.73333,
+				"loudness": -12.406,
+				"valence": 0.5644159063204205,
+				"danceability": 0.7072561410157304
+			}
+		`,
+		Valid: true,
+	}
 
-	assert.Equal(t, 0, len(ds.D))
-	ds.Append(DataObject{Label: "abc", Total: 4})
-	assert.Equal(t, 1, len(ds.D))
+	da := DataAdapter{}
+	as, _ := da.parseAudioSummary(v)
+
+	assert.Equal(t, 88.088, as.Tempo)
 }
 
-func TestDatasetKeepsCorrectTotal(t *testing.T) {
-	ds := DataSet{}
-	assert.Equal(t, 0, ds.Total)
+func TestParseAudioSumaryWhenValueIsNull(t *testing.T) {
+	v := sql.NullString{
+		String: `null`,
+		Valid:  true,
+	}
 
-	ds.Append(DataObject{Label: "abc", Total: 4})
-	assert.Equal(t, 4, ds.Total)
+	da := DataAdapter{}
+	as, _ := da.parseAudioSummary(v)
 
-	ds.Append(DataObject{Label: "abc", Total: 5})
-	assert.Equal(t, 9, ds.Total)
+	assert.Equal(t, float64(0), as.Tempo)
 }
 
-func TestDatasetReturnsCorrectWeights(t *testing.T) {
-	ds := DataSet{}
-	ds.Append(DataObject{Label: "abc", Total: 4})
-	ds.Append(DataObject{Label: "abc", Total: 5})
+func TestParseAudioSumaryWhenValueIsNill(t *testing.T) {
+	v := sql.NullString{
+		Valid: false,
+	}
 
-	assert.Equal(t, []float64{4.0 / 9.0, 5.0 / 9.0}, ds.GetWeights())
-}
+	da := DataAdapter{}
+	as, _ := da.parseAudioSummary(v)
 
-func TestSumOfWeighShouleBeZero(t *testing.T) {
-	ds := DataSet{}
-	ds.Append(DataObject{Label: "abc", Total: 4})
-	ds.Append(DataObject{Label: "abc", Total: 5})
-	ds.Append(DataObject{Label: "abc", Total: 6})
-
-	weights := ds.GetWeights()
-
-	assert.Equal(t, float64(1), weights[0]+weights[1]+weights[2])
+	assert.Equal(t, float64(0), as.Tempo)
 }
