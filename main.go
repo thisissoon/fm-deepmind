@@ -5,56 +5,32 @@ import (
 	"os/signal"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/thisissoon/fm-deepmind/fm"
-	"github.com/thisissoon/fm-deepmind/fm_api"
-	"github.com/thisissoon/fm-deepmind/rnd"
-
 	"github.com/spf13/viper"
-	"github.com/thisissoon/fm-deepmind/socket"
+
+	"github.com/thisissoon/fm-deepmind/deepmind"
 )
 
 func main() {
 	viper.AutomaticEnv()
 	viper.SetDefault("USER_TOKEN", "")
-	viper.SetDefault("PERCEPTOR_ADDRESS", "perceptor.thisissoon.fm")
+	viper.SetDefault("EVENT_SERVICE", "")
 	viper.SetDefault("SECRET", "")
 	viper.SetDefault("DB", "")
+	viper.SetDefault("MIN_TRACKS", 2)
+	viper.SetDefault("LAST_TRACK_AT", 18)
 
-	log.Printf("%s", viper.GetString("PERCEPTOR_ADDRESS"))
+	deepmind := deepmind.NewDeepmind(
+		deepmind.Config{
+			UserToken:    viper.GetString("USER_TOKEN"),
+			EventService: viper.GetString("EVENT_SERVICE"),
+			Secret:       viper.GetString("SECRET"),
+			Db:           viper.GetString("DB"),
+			MinTracks:    viper.GetInt("MIN_TRACKS"),
+			LastTrackAt:  viper.GetInt("LAST_TRACK_AT"),
+		},
+	)
 
-	eventChannel := make(chan []byte)
-	endChannel := make(chan bool)
-
-	perceptor := socket.NewPerceptorService(
-		viper.GetString("PERCEPTOR_ADDRESS"),
-		viper.GetString("SECRET"),
-		eventChannel)
-	go perceptor.Run()
-
-	eventHandler := socket.NewHandler(eventChannel, endChannel)
-	go eventHandler.Run()
-
-	fmApi := fm_api.FmApiManager{
-		Token: viper.GetString("USER_TOKEN"),
-	}
-
-	data := fm.DataAdapter{}
-	if err := data.Conn(viper.GetString("DB")); err != nil {
-		log.Fatal("Scan: %e", err)
-		return
-	}
-
-	anon := func() string {
-		genres := data.GetGenreDataSet(14)
-		genreIndex := rnd.Weight(genres.GetWeights())
-		d := genres.Get(genreIndex)
-
-		tracks := data.GetTrackDataSetBasedOnGenre(d.Id)
-		trackIndex := rnd.Weight(tracks.GetWeights())
-		track := tracks.Get(trackIndex)
-		return track.Id
-	}
-	go fmApi.Listen(endChannel, 2, anon)
+	deepmind.Run()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
