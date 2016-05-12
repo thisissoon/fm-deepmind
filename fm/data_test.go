@@ -11,20 +11,20 @@ func TestParseAudioSumary(t *testing.T) {
 	v := sql.NullString{
 		String: `
 			{
-				"key": 2,
-				"tempo": 149.999,
-				"energy": 0.9,
-				"liveness": 0.3,
-				"analysis_url": "h",
-				"speechiness": 0.1,
-				"acousticness": 0.7,
-				"instrumentalness": 0.9,
-				"mode": 1,
+				"key": 5,
+				"tempo": 88.088,
+				"energy": 0.4246929822221389,
+				"liveness": 0.11306411657392115,
+				"analysis_url": "",
+				"speechiness": 0.06528033930143728,
+				"acousticness": 0.32661968843315015,
+				"instrumentalness": 1.7090341899105053e-07,
+				"mode": 0,
 				"time_signature": 4,
-				"duration": 3.4,
-				"loudness": -9.3,
-				"valence": 0.22267801204461538,
-				"danceability": 0.6063510834169058
+				"duration": 284.73333,
+				"loudness": -12.406,
+				"valence": 0.5644159063204205,
+				"danceability": 0.7072561410157304
 			}
 		`,
 		Valid: true,
@@ -33,7 +33,7 @@ func TestParseAudioSumary(t *testing.T) {
 	da := DataAdapter{}
 	as, _ := da.parseAudioSummary(v)
 
-	assert.Equal(t, 149.999, as.Tempo)
+	assert.Equal(t, 88.088, as.Tempo)
 }
 
 func TestParseAudioSumaryWhenValueIsNull(t *testing.T) {

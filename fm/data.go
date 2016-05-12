@@ -78,7 +78,8 @@ func (d *DataAdapter) GetTrackDataSetBasedOnGenre(genreId string) DataSet {
 		if err != nil {
 			log.Fatal("Scan: %e", err)
 		}
-		if audioSummary, err := d.parseAudioSummary(as); err != nil {
+
+		if audioSummary, err := d.parseAudioSummary(as); err == nil && audioSummary.IsValid == true {
 			dataset.Append(DataObject{
 				Id:    id,
 				Label: label,
@@ -127,15 +128,22 @@ func (d *DataAdapter) parseAudioSummary(v sql.NullString) (AudioSummary, error) 
 	if val != "null" {
 		if err = json.Unmarshal([]byte(val), &as); err != nil {
 			return AudioSummary{}, err
+		} else {
+			as.IsValid = true
 		}
 	}
+
 	return as, err
 }
 
 func (d *DataAdapter) GetAudioSummary() []AudioSummary {
 	audioSummaries := []AudioSummary{}
-
-	query := `SELECT audio_summary, created FROM track WHERE audio_summary is not null`
+	query := `
+		SELECT audio_summary, playlist_history.created
+		FROM playlist_history
+		INNER JOIN track ON playlist_history.track_id = track.id
+		WHERE audio_summary IS NOT null
+		`
 	rows, err := d.Db.Query(query)
 	if err != nil {
 		log.Fatal("%e", err)

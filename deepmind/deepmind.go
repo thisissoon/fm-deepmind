@@ -57,15 +57,18 @@ type Deepmind struct {
 	audioSummaryWeights *fm.AudioSummaryWeights
 }
 
-func (d *Deepmind) getRandomTrackUri() string {
+func (d *Deepmind) getRandomTrackUri() fm.DataObject {
 	genres := d.data.GetGenreDataSet(14)
 	genreIndex := rnd.Weight(genres.GetWeights())
 	genre := genres.Get(genreIndex)
 
 	tracks := d.data.GetTrackDataSetBasedOnGenre(genre.Id)
+	tracks.Endorse(func(o fm.DataObject) float64 {
+		return d.AudioSummaryEndorse(o, d.audioSumaryMatrix.GetQuartile(time.Now()))
+	})
+
 	trackIndex := rnd.Weight(tracks.GetWeights())
-	track := tracks.Get(trackIndex)
-	return track.Id
+	return tracks.Get(trackIndex)
 }
 
 func (d *Deepmind) runPerceptorListener() {
@@ -82,10 +85,9 @@ func (d *Deepmind) runPerceptorListener() {
 func (d *Deepmind) Run() {
 	// push tracks into the queue
 	fmApi := fm_api.FmApiManager{Token: d.config.UserToken}
-	if false {
-		d.runPerceptorListener()
-		go d.Listen(fmApi, d.getRandomTrackUri)
-	}
+
+	d.runPerceptorListener()
+	go d.Listen(fmApi, d.getRandomTrackUri)
 
 	go d.PopulateAudioSumaryMatrix()
 	d.ScheduleAction(cronexpr.MustParse("0 0 1 * *"), func() {
@@ -117,6 +119,7 @@ func (d *Deepmind) PopulateAudioSummaryWeights() {
 		}
 	})
 	d.audioSummaryWeights.Populate(audioSumaryMedians)
+	log.Infof("Today's weights :%+v", d.audioSummaryWeights)
 }
 
 func (d *Deepmind) AudioSummaryEndorse(o fm.DataObject, q fm.AudioSummaryQuartile) float64 {
@@ -145,7 +148,7 @@ func (d *Deepmind) AudioSummaryEndorse(o fm.DataObject, q fm.AudioSummaryQuartil
 	return endorse
 }
 
-func (d *Deepmind) Listen(m fm_api.FmApiManager, r func() string) {
+func (d *Deepmind) Listen(m fm_api.FmApiManager, r func() fm.DataObject) {
 	for {
 		<-d.endChannel
 		if getLondonTime().Hour() < d.config.LastTrackAt { // dont run after LastTrackAt
@@ -156,7 +159,7 @@ func (d *Deepmind) Listen(m fm_api.FmApiManager, r func() string) {
 			}
 
 			for i := 0; i < (d.config.MinTracks - len(queue)); i++ {
-				go m.AddTrack(r())
+				go m.AddTrack(r().Id)
 			}
 		}
 	}
@@ -168,7 +171,6 @@ func (d *Deepmind) ScheduleAction(cron *cronexpr.Expression, f func()) {
 		ticker := func() *time.Ticker {
 			next := cron.Next(time.Now())
 			diff := next.Sub(time.Now())
-			log.Infof("Next Tick: %s", next.Format(time.RFC1123))
 			return time.NewTicker(diff)
 		}
 		// Run the Ticker

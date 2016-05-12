@@ -30,6 +30,7 @@ type AudioSummary struct {
 	Valence          float64   `json:"valence",csv:"valence"`
 	Danceability     float64   `json:"danceability",csv:"danceability"`
 	Timestamp        time.Time `csv:"timestamp"`
+	IsValid          bool
 }
 
 // Quartiles of AudioSumary from set of tracks
@@ -160,7 +161,7 @@ func (ds *DataSet) CalculateWeights() {
 func (ds *DataSet) GetWeights() []float64 {
 	weights := []float64{}
 	for _, d := range ds.D {
-		weights = append(weights, d.Weight)
+		weights = append(weights, d.Weight+d.Weight*d.Endorse)
 	}
 	return weights
 }
