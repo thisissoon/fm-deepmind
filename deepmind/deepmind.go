@@ -97,6 +97,10 @@ func (d *Deepmind) Run() {
 	d.ScheduleAction(cronexpr.MustParse("0 0 * * *"), func() {
 		d.PopulateAudioSummaryWeights()
 	})
+
+	d.ScheduleAction(cronexpr.MustParse("0 10 * * *"), func() { // stop for stand ups
+		fmApi.Pause()
+	})
 }
 
 func (d *Deepmind) PopulateAudioSumaryMatrix() {
