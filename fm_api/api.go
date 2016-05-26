@@ -49,6 +49,24 @@ func (m *FmApiManager) AddTrack(t string) {
 	defer resp.Body.Close()
 }
 
+func (m *FmApiManager) Pause() {
+	log.Printf("paused")
+	url := "https://api.thisissoon.fm/player/pause"
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		log.Printf("%+v", err)
+	}
+	req.Header.Set("Access-Token", m.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("%+v %+v", err, resp)
+	}
+}
+
 func (m *FmApiManager) parseQueue(c []byte) ([]QueueItem, error) {
 	var err error
 	var queueItem []QueueItem
