@@ -175,6 +175,7 @@ func (d *Deepmind) ScheduleAction(cron *cronexpr.Expression, f func()) {
 		ticker := func() *time.Ticker {
 			next := cron.Next(time.Now())
 			diff := next.Sub(time.Now())
+			log.Infof("Next Tick: %s", next.Format(time.RFC1123))
 			return time.NewTicker(diff)
 		}
 		// Run the Ticker
