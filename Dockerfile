@@ -2,6 +2,9 @@
 FROM alpine:3.3
 MAINTAINER SOON_ <dorks@thisissoon.com>
 
+ENV TZ=Europe/London
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ## Environment Variables
 ENV GOPATH /deepmind
 ENV GOBIN /usr/local/bin
